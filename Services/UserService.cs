@@ -1,12 +1,15 @@
 ﻿using BugTrackerAPI.Entities;
 using BugTrackerAPI.Models;
 using System.Data.SqlClient;
+using System;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace BugTrackerAPI.Services
 {
     public interface IUserService
     {
         User LoginUser(UserLogin details);
+        User RegisterUser(UserRegister details);
     }
 
     public class UserService : IUserService
@@ -56,9 +59,7 @@ namespace BugTrackerAPI.Services
 
         public User LoginUser(UserLogin details)
         {
-            Console.WriteLine(details);
             User user = FindByEmail(details.Email);
-            Console.WriteLine(user);
             if (user == null)
             {
                 throw new ArgumentException("User not found.");
@@ -66,6 +67,34 @@ namespace BugTrackerAPI.Services
             if (user.Password != details.Password)
             {
                 throw new ArgumentException("Incorrect password.");
+            }
+            return user;
+        }
+
+        public User RegisterUser(UserRegister details)
+        {
+            // INSERT INTO users (user_id, email, password, role, avatar, name)
+            //VALUES('{user_id}', '{email}', '{password}', '{role}', '{avatar}', '{name}');
+
+            Guid uuid = Guid.NewGuid();
+            Console.WriteLine(details);
+            User user = FindByEmail(details.Email);
+            if(user == null) {
+                try
+                {
+                    string sql = $"INSERT INTO Users (Id, email, password, role, avatar, name) VALUES ('{uuid}','{details.Email}','{details.Password}', 'default', 'default','default')";
+                    Console.WriteLine(sql);
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                {
+                    connection.Open();
+                    SqlCommand command = new SqlCommand(sql, connection);
+                        command.ExecuteNonQuery();
+                }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
             }
             return user;
         }
