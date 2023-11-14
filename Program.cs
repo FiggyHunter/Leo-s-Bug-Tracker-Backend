@@ -43,4 +43,11 @@ app.MapGet("/", () => {
 
 app.UseRouting();
 app.MapControllers();
+app.UseCors(builder =>
+{
+    builder
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader();
+});
 app.Run();
