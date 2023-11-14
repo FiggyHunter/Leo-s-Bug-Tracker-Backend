@@ -18,5 +18,9 @@ namespace BugTrackerAPI.Entities
         public string Role { get; set; }
 
         public string Avatar { get; set; }
+        public override string ToString()
+        {
+            return $"Email: {Email}, Password: {Password}";
+        }
     }
 }
