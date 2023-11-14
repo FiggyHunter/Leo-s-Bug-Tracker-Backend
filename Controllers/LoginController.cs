@@ -10,7 +10,7 @@ using System.Text;
 
 namespace BugTrackerAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("auth/[controller]")]
     [ApiController]
     public class LoginController : ControllerBase
     {
@@ -49,16 +49,16 @@ namespace BugTrackerAPI.Controllers
 
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Name),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role),
-                new Claim(ClaimTypes.Dsa, user.Avatar),
+                new Claim("Name", user.Name),
+                new Claim("Email", user.Email),
+                new Claim("Role", user.Role),
+                new Claim("Avatar", user.Avatar),
             };
 
             var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],
               _configuration["Jwt:Audience"],
               claims,
-              expires: DateTime.Now.AddMinutes(15),
+              expires: DateTime.Now.AddMinutes(1),
               signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
