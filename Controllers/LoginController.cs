@@ -26,13 +26,20 @@ namespace BugTrackerAPI.Controllers
         [HttpPost]
         public IActionResult Login([FromBody] UserLogin userLogin)
         {
-            var user = Authenticate(userLogin);
-            if(user != null)
+            try
             {
+                User user = _userService.LoginUser(userLogin);
                 var token = Generate(user);
                 return Ok(token);
             }
-            return NotFound("User not found");
+            catch (Exception ex)
+            {
+                if (ex.Message == "Incorrect password.")
+                  return BadRequest("Incorrect Credentials");
+                if (ex.Message == "User not found.")
+                    return BadRequest("Incorrect Credentials");
+            }
+            return StatusCode(500, "Internal Server Error");
         }
 
         private string Generate(User user)
@@ -55,11 +62,6 @@ namespace BugTrackerAPI.Controllers
               signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-        private User Authenticate(UserLogin userLogin)
-        {
-            User user = _userService.LoginUser(userLogin);
-            return user;
         }
     }
 }

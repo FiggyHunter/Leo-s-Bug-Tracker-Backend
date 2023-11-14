@@ -49,9 +49,8 @@ namespace BugTrackerAPI.Services
             }
             catch (Exception ex)
             {
-                {
-                    return null;
-                }
+                Console.WriteLine(ex);
+                return null; 
             }
         }
 
@@ -60,9 +59,16 @@ namespace BugTrackerAPI.Services
             Console.WriteLine(details);
             User user = FindByEmail(details.Email);
             Console.WriteLine(user);
-            if (user.Password == details.Password)
-                return user;
-            return null;
+            if (user == null)
+            {
+                throw new ArgumentException("User not found.");
+            }
+            if (user.Password != details.Password)
+            {
+                throw new ArgumentException("Incorrect password.");
+            }
+            return user;
         }
+
     }
 }
