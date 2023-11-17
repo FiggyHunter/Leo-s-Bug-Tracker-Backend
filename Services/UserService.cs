@@ -73,30 +73,33 @@ namespace BugTrackerAPI.Services
 
         public User RegisterUser(UserRegister details)
         {
-            // INSERT INTO users (user_id, email, password, role, avatar, name)
-            //VALUES('{user_id}', '{email}', '{password}', '{role}', '{avatar}', '{name}');
-
-            Guid uuid = Guid.NewGuid();
             Console.WriteLine(details);
             User user = FindByEmail(details.Email);
+            if(user.Email != null)
+            {      
+               throw new ArgumentException("User already exists!");
+            }
             if(user == null) {
                 try
                 {
-                    string sql = $"INSERT INTO Users (Id, email, password, role, avatar, name) VALUES ('{uuid}','{details.Email}','{details.Password}', 'default', 'default','default')";
-                    Console.WriteLine(sql);
-                using (SqlConnection connection = new SqlConnection(_connectionString))
-                {
-                    connection.Open();
-                    SqlCommand command = new SqlCommand(sql, connection);
+                    Guid uuid = Guid.NewGuid();
+                    string sql = $"INSERT INTO Users (Id, email, password, role, avatar, name) VALUES ('{uuid}','{details.Email}','{details.Password}', 'unset', 'unset','unset')";
+                    using (SqlConnection connection = new SqlConnection(_connectionString))
+                    {
+                        connection.Open();
+                        SqlCommand command = new SqlCommand(sql, connection);
                         command.ExecuteNonQuery();
-                }
+
+                    }
+                    return new User { Id = uuid, Email = details.Email, Password = details.Password };
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex);
+                    throw new ArgumentException("Internal Server Error.");
                 }
             }
-            return user;
+            return null;
         }
 
     }
