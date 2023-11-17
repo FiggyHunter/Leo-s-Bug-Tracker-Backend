@@ -40,6 +40,8 @@ namespace BugTrackerAPI.Controllers
                     return BadRequest("Incorrect Credentials");
                 if (ex.Message == "User not found.")
                     return BadRequest("Incorrect Credentials");
+                if (ex.Message == "User already exists!")
+                    return BadRequest("User already exists!");
             }
             return StatusCode(500, "Internal Server Error");
         }
