@@ -49,6 +49,7 @@ namespace BugTrackerAPI.Controllers
 
             var claims = new[]
             {
+                new Claim("sub", user.Id.ToString()),
                 new Claim("Name", user.Name),
                 new Claim("Email", user.Email),
                 new Claim("Role", user.Role),
