@@ -1,4 +1,5 @@
-﻿using BugTrackerAPI.Entities;
+﻿using System.Data.Common;
+using BugTrackerAPI.Entities;
 using BugTrackerAPI.Models;
 using BugTrackerAPI.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -26,12 +27,15 @@ namespace BugTrackerAPI.Controllers
         [HttpPost]
         public IActionResult Register([FromBody] UserRegister userRegister)
         {
+
             try
             {
-                _userService.RegisterUser(userRegister);
-                //var token = Generate(user);
-                Console.WriteLine("try");
-                return Ok();
+                var user = _userService.RegisterUser(userRegister);
+                if (user != null)
+                {
+                    var token = Generate(user);
+                    return Ok(token);
+                }
             }
             catch (Exception ex)
             {
@@ -53,6 +57,7 @@ namespace BugTrackerAPI.Controllers
 
             var claims = new[]
             {
+                new Claim("sub", user.Id.ToString()),
                 new Claim("Name", user.Name),
                 new Claim("Email", user.Email),
                 new Claim("Role", user.Role),
