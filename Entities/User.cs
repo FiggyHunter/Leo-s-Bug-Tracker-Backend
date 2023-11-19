@@ -7,7 +7,7 @@ namespace BugTrackerAPI.Entities
         [Key]
         public Guid Id { get; set; }
 
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [Required]
         [EmailAddress] 
@@ -15,9 +15,9 @@ namespace BugTrackerAPI.Entities
 
         [Required]
         public string Password { get; set; }
-        public string Role { get; set; }
+        public string? Role { get; set; }
 
-        public string Avatar { get; set; }
+        public string? Avatar { get; set; }
         public override string ToString()
         {
             return $"Email: {Email}, Password: {Password}";
