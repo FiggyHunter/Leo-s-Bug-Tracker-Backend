@@ -3,10 +3,6 @@ using BugTrackerAPI.Models;
 using BugTrackerAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace BugTrackerAPI.Controllers
 {
@@ -15,10 +11,8 @@ namespace BugTrackerAPI.Controllers
     public class LoginController : ControllerBase
     {
         private IUserService _userService;
-        private IConfiguration _configuration;
-        public LoginController(IConfiguration configuration, IUserService userService)
+        public LoginController(IUserService userService)
         {   
-            _configuration = configuration; 
             _userService = userService;
         }
 
@@ -29,7 +23,7 @@ namespace BugTrackerAPI.Controllers
             try
             {
                 User user = _userService.LoginUser(userLogin);
-                var token = Generate(user);
+                var token = _userService.GenerateToken(user);
                 return Ok(token);
             }
             catch (Exception ex)
@@ -40,29 +34,6 @@ namespace BugTrackerAPI.Controllers
                     return BadRequest("Incorrect Credentials");
             }
             return StatusCode(500, "Internal Server Error");
-        }
-
-        private string Generate(User user)
-        {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-            var claims = new[]
-            {
-                new Claim("sub", user.Id.ToString()),
-                new Claim("Name", user.Name),
-                new Claim("Email", user.Email),
-                new Claim("Role", user.Role),
-                new Claim("Avatar", user.Avatar),
-            };
-
-            var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],
-              _configuration["Jwt:Audience"],
-              claims,
-              expires: DateTime.Now.AddMinutes(1),
-              signingCredentials: credentials);
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }
