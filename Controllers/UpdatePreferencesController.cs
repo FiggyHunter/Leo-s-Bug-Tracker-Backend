@@ -27,30 +27,9 @@ namespace BugTrackerAPI.Controllers
         public IActionResult Update([FromBody] UserUpdate userUpdateDetails)
         {
         Console.WriteLine(userUpdateDetails);
-        _userService.UpdateRoleAvatar(userUpdateDetails);
-        return Ok("ok");
-        }
-
-        private string Generate(User user)
-        {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-      
-            var claims = new[]
-            {
-                new Claim("Name", user.Name),
-                new Claim("Email", user.Email),
-                new Claim("Role", user.Role),
-                new Claim("Avatar", user.Avatar),
-            };
-
-            var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],
-              _configuration["Jwt:Audience"],
-              claims,
-              expires: DateTime.Now.AddMinutes(1),
-              signingCredentials: credentials);
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
+        var user = _userService.UpdateRoleAvatar(userUpdateDetails);
+        var token = _userService.GenerateToken(user);
+        return Ok(token);
         }
     }
 }
