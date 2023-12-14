@@ -28,6 +28,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddMvc();
 builder.Services.AddControllers(); 
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<DBConnectionService>();
 
 
 
