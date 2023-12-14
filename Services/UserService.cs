@@ -1,6 +1,5 @@
 ﻿using BugTrackerAPI.Entities;
 using BugTrackerAPI.Models;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Data.SqlClient;
 using System.IdentityModel.Tokens.Jwt;
@@ -9,6 +8,7 @@ using System.Text;
 
 namespace BugTrackerAPI.Services
 {
+
     public interface IUserService
     {
         User LoginUser(UserLogin details);
@@ -21,12 +21,12 @@ namespace BugTrackerAPI.Services
 
     public class UserService : IUserService
     {
-        private readonly string _connectionString;
+        private readonly DBConnectionService _dbConnectionService;
         private IConfiguration _configuration;
 
-        public UserService(IConfiguration configuration)
+        public UserService(DBConnectionService dbConnectionService, IConfiguration configuration)
         {
-            _connectionString = configuration.GetConnectionString("DefaultConnection"); 
+            _dbConnectionService = dbConnectionService;
             _configuration = configuration;
         }
 
@@ -34,7 +34,7 @@ namespace BugTrackerAPI.Services
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(_connectionString))
+                using (SqlConnection connection = _dbConnectionService.CreateConnection())
                 {
                     connection.Open();
                     string sql = $"SELECT * FROM Users WHERE Email = '{email}'";
@@ -72,7 +72,7 @@ namespace BugTrackerAPI.Services
             try
             {
                 var stringId = id.ToString();
-                using (SqlConnection connection = new SqlConnection(_connectionString))
+                using (SqlConnection connection = _dbConnectionService.CreateConnection())
                 {
                     connection.Open();
                     string sql = $"SELECT * FROM Users WHERE Id = '{stringId}'";
@@ -85,6 +85,7 @@ namespace BugTrackerAPI.Services
                         {
                             User user = new User
                             {
+                                Id = Guid.Parse(reader["Id"].ToString()),
                                 Name = reader["Name"].ToString(),
                                 Email = reader["Email"].ToString(),
                                 Password = reader["Password"].ToString(),
@@ -106,17 +107,20 @@ namespace BugTrackerAPI.Services
 
         public User LoginUser(UserLogin details)
         {
-            User user = FindByEmail(details.Email);
-            if (user == null)
-            {
-                throw new ArgumentException("User not found.");
-            }
-            if (user.Password != details.Password)
-            {
-                throw new ArgumentException("Incorrect password.");
-            }
-            return user;
+                User user = FindByEmail(details.Email);
+
+                if (user == null)
+                {
+                    throw new ArgumentException("User not found.");
+                }
+
+                if (BCrypt.Net.BCrypt.Verify(details.Password, user.Password) == false)
+                {
+                    throw new ArgumentException("Incorrect password.");
+                }
+                else return user;
         }
+
 
         public User RegisterUser(UserRegister details)
         {
@@ -130,8 +134,9 @@ namespace BugTrackerAPI.Services
                 try
                 {
                     Guid uuid = Guid.NewGuid();
-                    string sql = $"INSERT INTO Users (Id, email, password, role, avatar, name) VALUES ('{uuid}','{details.Email}','{details.Password}', 'unset', 'unset','unset')";
-                    using (SqlConnection connection = new SqlConnection(_connectionString))
+                    string hashedPassword = BCrypt.Net.BCrypt.HashPassword(details.Password);
+                    string sql = $"INSERT INTO Users (Id, email, password, role, avatar, name) VALUES ('{uuid}','{details.Email}','{hashedPassword}', 'unset', 'unset','unset')";
+                    using (SqlConnection connection = _dbConnectionService.CreateConnection())
                     {
                         connection.Open();
                         SqlCommand command = new SqlCommand(sql, connection);
@@ -152,8 +157,9 @@ namespace BugTrackerAPI.Services
         {
             try
             {
-                string sql = $"UPDATE Users SET Role = @Role, Avatar = @Avatar WHERE ID = @Id";
-                using (SqlConnection connection = new SqlConnection(_connectionString))
+                Console.WriteLine(details.Id);
+                string sql = $"UPDATE Users SET Role = @Role, Avatar = @Avatar WHERE Id = @Id";
+                using (SqlConnection connection = _dbConnectionService.CreateConnection())
                 {
                     connection.Open();
                     SqlCommand command = new SqlCommand(sql, connection);
@@ -163,7 +169,6 @@ namespace BugTrackerAPI.Services
                     command.ExecuteNonQuery();
 
                 }
-                Console.WriteLine("done");
                 return FindById(details.Id);
             }
 
@@ -180,7 +185,7 @@ namespace BugTrackerAPI.Services
             try
             {
                 string sql = $"UPDATE Users SET Name = @Name WHERE ID = @Id";
-                using (SqlConnection connection = new SqlConnection(_connectionString))
+                using (SqlConnection connection = _dbConnectionService.CreateConnection())
                 {
                     connection.Open();
                     SqlCommand command = new SqlCommand(sql, connection);
@@ -217,7 +222,7 @@ namespace BugTrackerAPI.Services
             var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],
               _configuration["Jwt:Audience"],
               claims,
-              expires: DateTime.Now.AddMinutes(1),
+              expires: DateTime.Now.AddMinutes(5),
               signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
