@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Configuration;
-using System.Data.SqlClient;
+using Npgsql;
 
 namespace BugTrackerAPI.Services
 {
@@ -12,9 +12,9 @@ namespace BugTrackerAPI.Services
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
-        public SqlConnection CreateConnection()
+        public NpgsqlConnection CreateConnection()
         {
-            return new SqlConnection(_connectionString);
+            return new NpgsqlConnection(_connectionString);
         }
     }
 }

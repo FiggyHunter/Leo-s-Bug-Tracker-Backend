@@ -1,6 +1,7 @@
 ﻿using BugTrackerAPI.Entities;
 using BugTrackerAPI.Models;
 using Microsoft.IdentityModel.Tokens;
+using Npgsql;
 using System.Data.SqlClient;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -34,14 +35,14 @@ namespace BugTrackerAPI.Services
         {
             try
             {
-                using (SqlConnection connection = _dbConnectionService.CreateConnection())
+                using (Npgsql.NpgsqlConnection connection = _dbConnectionService.CreateConnection())
                 {
                     connection.Open();
                     string sql = $"SELECT * FROM Users WHERE Email = '{email}'";
                     Console.WriteLine(sql);
-                    SqlCommand command = new SqlCommand(sql, connection);
+                    Npgsql.NpgsqlCommand command = new Npgsql.NpgsqlCommand(sql, connection);
 
-                    using (SqlDataReader reader = command.ExecuteReader())
+                    using (Npgsql.NpgsqlDataReader reader = command.ExecuteReader())
                     {
                         while (reader.Read())
                         {
@@ -72,14 +73,14 @@ namespace BugTrackerAPI.Services
             try
             {
                 var stringId = id.ToString();
-                using (SqlConnection connection = _dbConnectionService.CreateConnection())
+                using (Npgsql.NpgsqlConnection connection = _dbConnectionService.CreateConnection())
                 {
                     connection.Open();
                     string sql = $"SELECT * FROM Users WHERE Id = '{stringId}'";
                     Console.WriteLine(sql);
-                    SqlCommand command = new SqlCommand(sql, connection);
+                    Npgsql.NpgsqlCommand command = new Npgsql.NpgsqlCommand(sql, connection);
 
-                    using (SqlDataReader reader = command.ExecuteReader())
+                    using (Npgsql.NpgsqlDataReader reader = command.ExecuteReader())
                     {
                         while (reader.Read())
                         {
@@ -136,10 +137,10 @@ namespace BugTrackerAPI.Services
                     Guid uuid = Guid.NewGuid();
                     string hashedPassword = BCrypt.Net.BCrypt.HashPassword(details.Password);
                     string sql = $"INSERT INTO Users (Id, email, password, role, avatar, name) VALUES ('{uuid}','{details.Email}','{hashedPassword}', 'unset', 'unset','unset')";
-                    using (SqlConnection connection = _dbConnectionService.CreateConnection())
+                    using (Npgsql.NpgsqlConnection connection = _dbConnectionService.CreateConnection())
                     {
                         connection.Open();
-                        SqlCommand command = new SqlCommand(sql, connection);
+                        Npgsql.NpgsqlCommand command = new Npgsql.NpgsqlCommand(sql, connection);
                         command.ExecuteNonQuery();
 
                     }
@@ -159,10 +160,10 @@ namespace BugTrackerAPI.Services
             {
                 Console.WriteLine(details.Id);
                 string sql = $"UPDATE Users SET Role = @Role, Avatar = @Avatar WHERE Id = @Id";
-                using (SqlConnection connection = _dbConnectionService.CreateConnection())
+                using (Npgsql.NpgsqlConnection connection = _dbConnectionService.CreateConnection())
                 {
                     connection.Open();
-                    SqlCommand command = new SqlCommand(sql, connection);
+                    Npgsql.NpgsqlCommand command = new Npgsql.NpgsqlCommand(sql, connection);
                     command.Parameters.AddWithValue("@Role", details.Role);
                     command.Parameters.AddWithValue("@Avatar", details.Avatar);
                     command.Parameters.AddWithValue("@Id", details.Id.ToString());
@@ -185,10 +186,10 @@ namespace BugTrackerAPI.Services
             try
             {
                 string sql = $"UPDATE Users SET Name = @Name WHERE ID = @Id";
-                using (SqlConnection connection = _dbConnectionService.CreateConnection())
+                using (Npgsql.NpgsqlConnection connection = _dbConnectionService.CreateConnection())
                 {
                     connection.Open();
-                    SqlCommand command = new SqlCommand(sql, connection);
+                    Npgsql.NpgsqlCommand command = new Npgsql.NpgsqlCommand(sql, connection);
                     command.Parameters.AddWithValue("@Name", details.Name);
                     command.Parameters.AddWithValue("@Id", details.Id.ToString());
                     command.ExecuteNonQuery();
